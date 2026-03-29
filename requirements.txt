@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+crewai
+crewai-tools
+pydantic
+pandas
+numpy
+scikit-learn
+imbalanced-learn
+transformers
+torch
+python-dotenv
+requests
+sqlalchemy
