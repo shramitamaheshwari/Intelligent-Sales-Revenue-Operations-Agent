@@ -14,5 +14,6 @@ class CopywriterAgentBuilder:
                 "2. If the risk context includes a competitor mention, enforce a strict 75-word maximum limit.\n"
                 "3. Use 'Chris Voss Labeling' psychology to validate choices and build trust."
             ),
-            verbose=True
+            verbose=True,
+            llm="groq/llama3-8b-8192"
         )

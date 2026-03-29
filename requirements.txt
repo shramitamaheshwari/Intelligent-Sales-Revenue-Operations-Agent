@@ -12,3 +12,5 @@ torch
 python-dotenv
 requests
 sqlalchemy
+litellm
+langchain-groq

@@ -34,7 +34,7 @@ class RevenueRecoveryFlow(Flow):
     @human_feedback(
         message="Review the AI-drafted recovery email. Do you approve, reject, or need specific revisions?",
         emit=["approved", "rejected", "needs_revision"],
-        llm="gpt-4o-mini", # Lightweight router model for structured output
+        llm="groq/llama3-8b-8192", # Lightweight free router model for structured output parsing
         default_outcome="needs_revision"
     )
     # The or_ operator enables the self-healing revision loop

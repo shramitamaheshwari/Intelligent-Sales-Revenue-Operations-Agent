@@ -8,7 +8,8 @@ class AnalystAgentBuilder:
             role='RevOps Intelligence Analyst',
             goal='Detect competitor mentions and churn signals in client telemetry and emails.',
             backstory='An analytical engine trained on B2B SaaS usage metrics and BERT sentiment models. You are highly detail-oriented.',
-            verbose=True
+            verbose=True,
+            llm="groq/llama3-8b-8192"
         )
 
 # Pipeline structure Mock

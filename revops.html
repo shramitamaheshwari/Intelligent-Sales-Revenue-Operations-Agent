@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RevOps Intelligence Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c24;
+    --border: #1e2430;
+    --border2: #2a3040;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --accent: #00d4a0;
+    --accent2: #0099ff;
+    --danger: #ff4d6a;
+    --warn: #ffaa00;
+    --purple: #9b5de5;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* === HEADER === */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(0,212,160,0.08);
+    border: 1px solid rgba(0,212,160,0.2);
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  .status-badge .dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+
+  /* === LAYOUT === */
+  .app {
+    display: grid;
+    grid-template-columns: 220px 1fr 340px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* === SIDEBAR === */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 16px 0;
+    overflow-y: auto;
+  }
+
+  .nav-section {
+    padding: 0 12px;
+    margin-bottom: 24px;
+  }
+
+  .nav-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0 8px;
+    margin-bottom: 6px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.15s;
+    font-size: 12.5px;
+    margin-bottom: 2px;
+    user-select: none;
+  }
+
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(0,212,160,0.1); color: var(--accent); border: 1px solid rgba(0,212,160,0.15); }
+
+  .nav-item .icon { width: 16px; text-align: center; font-size: 14px; }
+
+  .nav-badge {
+    margin-left: auto;
+    background: var(--danger);
+    color: #fff;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+
+  /* === MAIN === */
+  .main {
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* === METRICS ROW === */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .metric-card.green::before { background: var(--accent); }
+  .metric-card.blue::before { background: var(--accent2); }
+  .metric-card.red::before { background: var(--danger); }
+  .metric-card.orange::before { background: var(--warn); }
+
+  .metric-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+
+  .metric-value {
+    font-size: 26px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .metric-value.green { color: var(--accent); }
+  .metric-value.blue { color: var(--accent2); }
+  .metric-value.red { color: var(--danger); }
+  .metric-value.orange { color: var(--warn); }
+
+  .metric-sub {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* === ACCOUNT TABLE === */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .table-header-row {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th {
+    padding: 10px 16px;
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    font-weight: 500;
+  }
+
+  td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12.5px;
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr { transition: background 0.12s; cursor: pointer; }
+  tr:hover td { background: var(--surface2); }
+  tr.selected td { background: rgba(0,212,160,0.05); }
+
+  .risk-bar {
+    width: 80px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+
+  .risk-fill { height: 100%; border-radius: 2px; }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+  }
+
+  .tag.red { background: rgba(255,77,106,0.12); color: var(--danger); border: 1px solid rgba(255,77,106,0.2); }
+  .tag.orange { background: rgba(255,170,0,0.1); color: var(--warn); border: 1px solid rgba(255,170,0,0.2); }
+  .tag.green { background: rgba(0,212,160,0.1); color: var(--accent); border: 1px solid rgba(0,212,160,0.2); }
+  .tag.blue { background: rgba(0,153,255,0.1); color: var(--accent2); border: 1px solid rgba(0,153,255,0.2); }
+  .tag.purple { background: rgba(155,93,229,0.1); color: var(--purple); border: 1px solid rgba(155,93,229,0.2); }
+
+  .signal-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .signal-dot.red { background: var(--danger); }
+  .signal-dot.orange { background: var(--warn); }
+  .signal-dot.green { background: var(--accent); }
+
+  /* === RIGHT PANEL === */
+  .right-panel {
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .panel-tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .panel-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: rgba(0,212,160,0.04);
+  }
+
+  .panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  /* === ACCOUNT DETAIL === */
+  .account-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .account-meta {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    margin-bottom: 16px;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .detail-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+  }
+
+  .detail-item-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .detail-item-value {
+    font-size: 14px;
+    font-weight: 500;
+    font-family: var(--font-mono);
+  }
+
+  /* === FLOW VISUALIZER === */
+  .flow-step {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 4px;
+    align-items: flex-start;
+    position: relative;
+  }
+
+  .flow-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 32px;
+    width: 1px;
+    height: calc(100% + 4px);
+    background: var(--border2);
+  }
+
+  .flow-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    z-index: 1;
+    border: 1px solid var(--border);
+  }
+
+  .flow-icon.active { background: rgba(0,212,160,0.15); border-color: rgba(0,212,160,0.3); }
+  .flow-icon.pending { background: var(--surface2); }
+  .flow-icon.done { background: rgba(0,212,160,0.08); border-color: rgba(0,212,160,0.2); }
+  .flow-icon.waiting { background: rgba(255,170,0,0.1); border-color: rgba(255,170,0,0.25); animation: glow-warn 2s infinite; }
+
+  @keyframes glow-warn {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,170,0,0); }
+    50% { box-shadow: 0 0 12px 2px rgba(255,170,0,0.15); }
+  }
+
+  .flow-body { flex: 1; padding-top: 6px; padding-bottom: 16px; }
+  .flow-title { font-size: 12.5px; font-weight: 500; margin-bottom: 3px; }
+  .flow-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .flow-code {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent);
+    background: rgba(0,212,160,0.06);
+    border: 1px solid rgba(0,212,160,0.12);
+    padding: 2px 7px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 5px;
+  }
+
+  /* === EMAIL DRAFT === */
+  .draft-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .draft-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .draft-subject {
+    font-weight: 500;
+    font-size: 12.5px;
+  }
+
+  .draft-body {
+    padding: 14px;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #c5cad6;
+    white-space: pre-wrap;
+    font-family: var(--font-sans);
+  }
+
+  .hitl-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .hitl-actions .btn-full {
+    grid-column: 1 / -1;
+  }
+
+  .btn {
+    padding: 9px 16px;
+    border-radius: 6px;
+    border: 1px solid;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .btn-approve {
+    background: rgba(0,212,160,0.12);
+    border-color: rgba(0,212,160,0.3);
+    color: var(--accent);
+  }
+  .btn-approve:hover { background: rgba(0,212,160,0.2); }
+
+  .btn-reject {
+    background: rgba(255,77,106,0.08);
+    border-color: rgba(255,77,106,0.25);
+    color: var(--danger);
+  }
+  .btn-reject:hover { background: rgba(255,77,106,0.15); }
+
+  .btn-revise {
+    background: var(--surface2);
+    border-color: var(--border2);
+    color: var(--muted);
+  }
+  .btn-revise:hover { color: var(--text); border-color: var(--border2); background: var(--border); }
+
+  .btn-full {
+    width: 100%;
+  }
+
+  .feedback-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    resize: none;
+    outline: none;
+    margin-bottom: 8px;
+    transition: border-color 0.15s;
+  }
+  .feedback-input:focus { border-color: rgba(0,212,160,0.35); }
+
+  /* === LOG === */
+  .log-entry {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 11.5px;
+  }
+
+  .log-time {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+    padding-top: 1px;
+    min-width: 52px;
+  }
+
+  .log-level {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 3px;
+    white-space: nowrap;
+    height: fit-content;
+    margin-top: 1px;
+  }
+
+  .log-level.info { background: rgba(0,153,255,0.15); color: var(--accent2); }
+  .log-level.warn { background: rgba(255,170,0,0.12); color: var(--warn); }
+  .log-level.ok { background: rgba(0,212,160,0.1); color: var(--accent); }
+  .log-level.err { background: rgba(255,77,106,0.12); color: var(--danger); }
+
+  .log-msg { color: #9ca3af; line-height: 1.5; }
+  .log-msg span { color: var(--text); font-weight: 500; }
+
+  /* === SIGNAL CHART === */
+  .mini-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 32px;
+  }
+
+  .mini-bar {
+    flex: 1;
+    border-radius: 2px 2px 0 0;
+    min-width: 4px;
+    transition: height 0.3s;
+  }
+
+  /* === NOTIFICATION TOAST === */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 14px 18px;
+    width: 320px;
+    z-index: 999;
+    transform: translateX(360px);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .toast.show { transform: translateX(0); }
+
+  .toast-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .toast-icon { font-size: 16px; }
+  .toast-body { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+
+  /* === PIPELINE VIZ === */
+  .pipeline-viz {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 16px;
+    overflow-x: auto;
+  }
+
+  .pipe-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .pipe-circle {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    border: 2px solid var(--border);
+    background: var(--surface2);
+    transition: all 0.3s;
+  }
+
+  .pipe-circle.done { border-color: var(--accent); background: rgba(0,212,160,0.1); }
+  .pipe-circle.active { border-color: var(--warn); background: rgba(255,170,0,0.1); animation: glow-warn 1.5s infinite; }
+  .pipe-circle.idle { border-color: var(--border); opacity: 0.4; }
+
+  .pipe-label { font-size: 9px; color: var(--muted); font-family: var(--font-mono); text-align: center; white-space: nowrap; letter-spacing: 0.05em; }
+
+  .pipe-arrow {
+    width: 28px; height: 1px;
+    background: var(--border2);
+    flex-shrink: 0;
+    margin-top: -16px;
+  }
+
+  .pipe-arrow.done { background: var(--accent); opacity: 0.4; }
+
+  /* === SCROLL CUSTOM === */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  .shimmer {
+    animation: shimmer 2.5s infinite;
+  }
+  @keyframes shimmer {
+    0%,100% { opacity: 1; } 50% { opacity: 0.5; }
+  }
+
+  .separator {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 14px 0;
+  }
+
+  .panel-sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    margin-top: 16px;
+  }
+
+  .signal-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .signal-row:last-child { border-bottom: none; }
+
+  .signal-name { font-size: 11.5px; color: var(--muted); }
+  .signal-val { font-family: var(--font-mono); font-size: 12px; }
+
+  .progress-mini {
+    width: 60px; height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 8px;
+  }
+  .progress-fill { height: 100%; border-radius: 2px; }
+
+  .btn-sm {
+    padding: 5px 12px;
+    font-size: 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-sm:hover { color: var(--text); border-color: var(--border2); }
+  .btn-sm.primary { background: rgba(0,212,160,0.1); color: var(--accent); border-color: rgba(0,212,160,0.25); }
+  .btn-sm.primary:hover { background: rgba(0,212,160,0.18); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .empty-state .icon { font-size: 28px; margin-bottom: 10px; opacity: 0.4; }
+
+  .panel-hidden { display: none; }
+
+  .trigger-btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .roi-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12.5px;
+  }
+  .roi-row:last-child { border-bottom: none; }
+  .roi-label { color: var(--muted); }
+  .roi-val { font-family: var(--font-mono); font-weight: 500; }
+  .roi-val.green { color: var(--accent); }
+  .roi-val.big { font-size: 18px; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-header">
+    <span class="toast-icon">🤖</span>
+    <span id="toast-title">Agent Alert</span>
+  </div>
+  <div class="toast-body" id="toast-body">Processing account health...</div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    REVOPS · INTELLIGENCE AGENT
+  </div>
+  <div class="header-right">
+    <div class="status-badge">
+      <div class="dot"></div>
+      AGENTS ONLINE · 2/2
+    </div>
+    <div style="font-size:11px;color:var(--muted);font-family:var(--font-mono);">v1.0 HACKATHON</div>
+  </div>
+</header>
+
+<!-- APP BODY -->
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">Operations</div>
+      <div class="nav-item active" onclick="switchView('accounts')">
+        <span class="icon">⬡</span> Account Monitor
+        <span class="nav-badge" id="alert-count">3</span>
+      </div>
+      <div class="nav-item" onclick="switchView('pipeline')">
+        <span class="icon">◎</span> Agent Pipeline
+      </div>
+      <div class="nav-item" onclick="switchView('roi')">
+        <span class="icon">◈</span> ROI Model
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Agents</div>
+      <div class="nav-item" onclick="switchView('analyst')">
+        <span class="icon">◬</span> Intelligence Analyst
+      </div>
+      <div class="nav-item" onclick="switchView('strategist')">
+        <span class="icon">◭</span> Sales Strategist
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">System</div>
+      <div class="nav-item" onclick="switchView('logs')">
+        <span class="icon">≡</span> System Logs
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- VIEW: ACCOUNTS -->
+    <div id="view-accounts">
+      <!-- Metrics -->
+      <div class="metrics-row">
+        <div class="metric-card red">
+          <div class="metric-label">AT-RISK MRR</div>
+          <div class="metric-value red">$500K</div>
+          <div class="metric-sub">12 accounts flagged</div>
+        </div>
+        <div class="metric-card orange">
+          <div class="metric-label">CHURN PROBABILITY</div>
+          <div class="metric-value orange">28.4%</div>
+          <div class="metric-sub">↑ 6.2% this week</div>
+        </div>
+        <div class="metric-card green">
+          <div class="metric-label">RECOVERED MRR</div>
+          <div class="metric-value green">$75K</div>
+          <div class="metric-sub">+15pt recovery lift</div>
+        </div>
+        <div class="metric-card blue">
+          <div class="metric-label">AGENT ACTIONS</div>
+          <div class="metric-value blue">47</div>
+          <div class="metric-sub">Last 7 days</div>
+        </div>
+      </div>
+
+      <!-- Simulate Triggers -->
+      <div>
+        <div class="section-header">
+          <div class="section-title">Trigger Simulation</div>
+        </div>
+        <div class="trigger-btn-row">
+          <button class="btn-sm primary" onclick="triggerEvent('usage_drop')">▶ Simulate Usage Drop</button>
+          <button class="btn-sm primary" onclick="triggerEvent('champion')">▶ Champion Inactive</button>
+          <button class="btn-sm primary" onclick="triggerEvent('competitor')">▶ Competitor Email</button>
+          <button class="btn-sm" onclick="triggerEvent('sweep')">⟳ Nightly CRM Sweep</button>
+        </div>
+      </div>
+
+      <!-- Account Table -->
+      <div class="table-wrap">
+        <div class="table-header-row">
+          <div class="section-title">At-Risk Accounts · CRM Monitor</div>
+          <button class="btn-sm" onclick="runSweep()">⟳ Refresh</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Account</th>
+              <th>CMRR</th>
+              <th>Risk Score</th>
+              <th>Primary Signal</th>
+              <th>Email Tone</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="account-tbody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VIEW: PIPELINE -->
+    <div id="view-pipeline" class="panel-hidden">
+      <div class="section-title" style="margin-bottom:16px;">CrewAI Flow · Live Execution State</div>
+
+      <div class="pipeline-viz" id="pipeline-viz">
+        <div class="pipe-node">
+          <div class="pipe-circle done" id="pn-0">⬢</div>
+          <div class="pipe-label">WEBHOOK<br>TRIGGER</div>
+        </div>
+        <div class="pipe-arrow done"></div>
+        <div class="pipe-node">
+          <div class="pipe-circle done" id="pn-1">◬</div>
+          <div class="pipe-label">ANALYST<br>AGENT</div>
+        </div>
+        <div class="pipe-arrow done"></div>
+        <div class="pipe-node">
+          <div class="pipe-circle done" id="pn-2">◭</div>
+          <div class="pipe-label">STRATEGIST<br>AGENT</div>
+        </div>
+        <div class="pipe-arrow" id="pa-3"></div>
+        <div class="pipe-node">
+          <div class="pipe-circle active" id="pn-3">⏸</div>
+          <div class="pipe-label">HITL<br>REVIEW</div>
+        </div>
+        <div class="pipe-arrow" id="pa-4"></div>
+        <div class="pipe-node">
+          <div class="pipe-circle idle" id="pn-4">◈</div>
+          <div class="pipe-label">EXECUTE /<br>ABORT</div>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-bottom:16px;">
+        <div class="table-header-row"><div class="section-title">Flow Step Detail</div></div>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:16px;">
+          <div class="flow-step">
+            <div class="flow-icon done">⬢</div>
+            <div class="flow-body">
+              <div class="flow-title">Webhook Event Received</div>
+              <div class="flow-desc">FastAPI endpoint received <strong>feature_usage_dropped</strong> event for AcmeCorp. Telemetry: 60% drop in core modules over 72h.</div>
+              <div class="flow-code">@start() · analyze_account_health()</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-icon done">◬</div>
+            <div class="flow-body">
+              <div class="flow-title">Intelligence Analyst Agent · Complete</div>
+              <div class="flow-desc">Random Forest churn score: <strong>0.87</strong>. SHAP top signals: days_since_last_login (+0.31), feature_adoption_breadth (-0.22). Zero-shot: competitor_comparison (0.71). NER: [ORG_01=AcmeCorp], PII stripped.</div>
+              <div class="flow-code">Risk JSON emitted → Orchestrator</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-icon done">◭</div>
+            <div class="flow-body">
+              <div class="flow-title">Sales Strategist Agent · Draft Complete</div>
+              <div class="flow-desc">Framework selected: <strong>Usage Drop / Abandoned Intent</strong>. Chris Voss Labeling applied. Reverse psychology framing. 75-word limit enforced.</div>
+              <div class="flow-code">@listen("draft_recovery_play")</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-icon waiting">⏸</div>
+            <div class="flow-body">
+              <div class="flow-title" style="color:var(--warn);">HITL Gate · Awaiting AE Approval</div>
+              <div class="flow-desc">Execution paused. Draft + approval link dispatched to AE Slack channel. Router model (gpt-4o-mini) standing by to parse natural language feedback.</div>
+              <div class="flow-code">@human_feedback · emit: [approved | rejected | needs_revision]</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-icon pending">◈</div>
+            <div class="flow-body">
+              <div class="flow-title" style="color:var(--muted);">Execute / Abort · Pending</div>
+              <div class="flow-desc">Awaiting HITL gate resolution. Will route to execute_campaign() → CRM API or abort_campaign() → RLHF log.</div>
+              <div class="flow-code">@listen("approved") | @listen("rejected")</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: ROI -->
+    <div id="view-roi" class="panel-hidden">
+      <div class="section-title" style="margin-bottom:20px;">Quantified Business Impact Model · Year 1</div>
+      <div class="metrics-row" style="margin-bottom:20px;">
+        <div class="metric-card green">
+          <div class="metric-label">COST EFFICIENCY</div>
+          <div class="metric-value green">$35K</div>
+          <div class="metric-sub">Net operational savings</div>
+        </div>
+        <div class="metric-card blue">
+          <div class="metric-label">REVENUE RECOVERED</div>
+          <div class="metric-value blue">$75K</div>
+          <div class="metric-sub">+15pt recovery rate lift</div>
+        </div>
+        <div class="metric-card orange">
+          <div class="metric-label">IMPL. COST</div>
+          <div class="metric-value orange">$30K</div>
+          <div class="metric-sub">Dev + licenses + infra</div>
+        </div>
+        <div class="metric-card green">
+          <div class="metric-label">TOTAL ROI</div>
+          <div class="metric-value green">266%</div>
+          <div class="metric-sub">Year 1 return</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header-row"><div class="section-title">Formula Breakdown</div></div>
+        <div style="padding:0 16px;">
+          <div class="roi-row">
+            <div class="roi-label">At-risk deals / year</div>
+            <div class="roi-val">1,000</div>
+          </div>
+          <div class="roi-row">
+            <div class="roi-label">AE time saved per deal</div>
+            <div class="roi-val">30 min</div>
+          </div>
+          <div class="roi-row">
+            <div class="roi-label">Fully loaded AE hourly rate</div>
+            <div class="roi-val">$75 / hr</div>
+          </div>
+          <div class="roi-row">
+            <div class="roi-label">Gross operational saving</div>
+            <div class="roi-val green">$37,500</div>
+          </div>
+          <div class="roi-row">
+            <div class="roi-label">LLM API overhead</div>
+            <div class="roi-val" style="color:var(--danger);">- $2,500</div>
+          </div>
+          <div class="roi-row">
+            <div class="roi-label">Net cost efficiency</div>
+            <div class="roi-val green">$35,000</div>
+          </div>
+          <div class="roi-row">
+            <div class="roi-label">At-risk MRR base</div>
+            <div class="roi-val">$500,000</div>
+          </div>
+          <div class="roi-row">
+            <div class="roi-label">Recovery rate lift (30% → 45%)</div>
+            <div class="roi-val">+15 pts</div>
+          </div>
+          <div class="roi-row">
+            <div class="roi-label">Recovered MRR</div>
+            <div class="roi-val green">$75,000</div>
+          </div>
+          <div class="roi-row" style="border-top: 1px solid var(--accent);padding-top:14px;margin-top:4px;">
+            <div class="roi-label" style="font-weight:600;color:var(--text);">Total Year-1 ROI</div>
+            <div class="roi-val big">266%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: ANALYST -->
+    <div id="view-analyst" class="panel-hidden">
+      <div class="section-title" style="margin-bottom:16px;">RevOps Intelligence Analyst Agent</div>
+      <div class="table-wrap">
+        <div class="table-header-row"><div class="section-title">ML Model Stack</div></div>
+        <table>
+          <thead><tr><th>Component</th><th>Type</th><th>Execution</th><th>Performance</th></tr></thead>
+          <tbody>
+            <tr><td>Random Forest Churn Predictor</td><td><span class="tag orange">Structured</span></td><td>Local (scikit-learn)</td><td>F1: 0.91</td></tr>
+            <tr><td>HuggingFace Zero-Shot NLI</td><td><span class="tag blue">Unstructured</span></td><td>HF Inference API</td><td>Acc: 93.3%</td></tr>
+            <tr><td>Minibase.ai NER (369MB)</td><td><span class="tag purple">Entity</span></td><td>Local CPU · 323ms</td><td>F1: 95.1%</td></tr>
+            <tr><td>SHAP Explainer</td><td><span class="tag green">Explainability</span></td><td>Local (in-memory)</td><td>Permutation PFI</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-wrap" style="margin-top:16px;">
+        <div class="table-header-row"><div class="section-title">Top 10 Churn Features</div></div>
+        <table>
+          <thead><tr><th>#</th><th>Signal</th><th>Category</th><th>Importance</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--muted);font-family:var(--font-mono)">01</td><td>relation_strength</td><td><span class="tag blue">Engagement</span></td><td><div class="risk-bar"><div class="risk-fill" style="width:95%;background:var(--accent2)"></div></div></td></tr>
+            <tr><td style="color:var(--muted);font-family:var(--font-mono)">02</td><td>CMRR_mean</td><td><span class="tag green">Financial</span></td><td><div class="risk-bar"><div class="risk-fill" style="width:85%;background:var(--accent)"></div></div></td></tr>
+            <tr><td style="color:var(--muted);font-family:var(--font-mono)">03</td><td>booking_type_entropy</td><td><span class="tag orange">Operational</span></td><td><div class="risk-bar"><div class="risk-fill" style="width:78%;background:var(--warn)"></div></div></td></tr>
+            <tr><td style="color:var(--muted);font-family:var(--font-mono)">04</td><td>days_since_last_login</td><td><span class="tag red">Usage</span></td><td><div class="risk-bar"><div class="risk-fill" style="width:72%;background:var(--danger)"></div></div></td></tr>
+            <tr><td style="color:var(--muted);font-family:var(--font-mono)">05</td><td>support_ticket_velocity</td><td><span class="tag purple">Support</span></td><td><div class="risk-bar"><div class="risk-fill" style="width:65%;background:var(--purple)"></div></div></td></tr>
+            <tr><td style="color:var(--muted);font-family:var(--font-mono)">06</td><td>feature_adoption_breadth</td><td><span class="tag red">Usage</span></td><td><div class="risk-bar"><div class="risk-fill" style="width:60%;background:var(--danger)"></div></div></td></tr>
+            <tr><td style="color:var(--muted);font-family:var(--font-mono)">07</td><td>champion_activity_index</td><td><span class="tag blue">Engagement</span></td><td><div class="risk-bar"><div class="risk-fill" style="width:55%;background:var(--accent2)"></div></div></td></tr>
+            <tr><td style="color:var(--muted);font-family:var(--font-mono)">08</td><td>payment_receipt_delay</td><td><span class="tag green">Financial</span></td><td><div class="risk-bar"><div class="risk-fill" style="width:48%;background:var(--accent)"></div></div></td></tr>
+            <tr><td style="color:var(--muted);font-family:var(--font-mono)">09</td><td>NPS_sentiment_score</td><td><span class="tag orange">Feedback</span></td><td><div class="risk-bar"><div class="risk-fill" style="width:40%;background:var(--warn)"></div></div></td></tr>
+            <tr><td style="color:var(--muted);font-family:var(--font-mono)">10</td><td>account_category_variance</td><td><span class="tag orange">Operational</span></td><td><div class="risk-bar"><div class="risk-fill" style="width:32%;background:var(--warn)"></div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VIEW: STRATEGIST -->
+    <div id="view-strategist" class="panel-hidden">
+      <div class="section-title" style="margin-bottom:16px;">B2B Sales Strategist Agent · Playbook</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div class="table-wrap" style="cursor:pointer;" onclick="selectPlay('champion')">
+          <div style="padding:16px;">
+            <div style="font-size:20px;margin-bottom:10px;">👑</div>
+            <div style="font-weight:600;margin-bottom:6px;font-size:13px;">Champion Leaves</div>
+            <div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:10px;">New stakeholder inherits vendor relationship. Trigger: champion_inactive signal.</div>
+            <div style="font-size:11px;color:var(--muted);">Psychology: Labeling · Risk Mitigation</div>
+          </div>
+        </div>
+        <div class="table-wrap" style="cursor:pointer;" onclick="selectPlay('usage')">
+          <div style="padding:16px;">
+            <div style="font-size:20px;margin-bottom:10px;">📉</div>
+            <div style="font-weight:600;margin-bottom:6px;font-size:13px;">Usage Drop</div>
+            <div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:10px;">60%+ feature usage decline in 72h. Trigger: feature_usage_dropped event.</div>
+            <div style="font-size:11px;color:var(--muted);">Psychology: Reverse Psychology · Ego Preservation</div>
+          </div>
+        </div>
+        <div class="table-wrap" style="cursor:pointer;" onclick="selectPlay('competitor')">
+          <div style="padding:16px;">
+            <div style="font-size:20px;margin-bottom:10px;">⚔️</div>
+            <div style="font-weight:600;margin-bottom:6px;font-size:13px;">Competitor Mention</div>
+            <div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:10px;">Prospect evaluating alternatives. Trigger: NLI intent = competitor_comparison.</div>
+            <div style="font-size:11px;color:var(--muted);">Psychology: Validation · Alignment · ≤75 words</div>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-top:16px;" id="play-detail">
+        <div class="table-header-row"><div class="section-title">Select a play above to preview the prompt</div></div>
+        <div class="empty-state">
+          <div class="icon">◭</div>
+          Click a recovery play to preview the agent's system prompt and example draft
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: LOGS -->
+    <div id="view-logs" class="panel-hidden">
+      <div class="section-title" style="margin-bottom:16px;">System Logs · Agent Execution Trace</div>
+      <div class="table-wrap">
+        <div style="padding:16px;" id="log-container">
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel">
+    <div class="panel-tabs">
+      <div class="panel-tab active" onclick="switchTab('detail')">Account</div>
+      <div class="panel-tab" onclick="switchTab('draft')">HITL Draft</div>
+      <div class="panel-tab" onclick="switchTab('arch')">Architecture</div>
+    </div>
+
+    <!-- ACCOUNT DETAIL -->
+    <div class="panel-content" id="tab-detail">
+      <div id="account-detail-empty" class="empty-state">
+        <div class="icon">⬡</div>
+        Select an account from the table to view its risk profile and signals
+      </div>
+      <div id="account-detail-content" style="display:none;">
+        <div class="account-name" id="detail-name">AcmeCorp</div>
+        <div class="account-meta" id="detail-meta">Enterprise · SaaS · $4,200/mo CMRR</div>
+
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-item-label">Churn Score</div>
+            <div class="detail-item-value" id="detail-score" style="color:var(--danger);">0.87</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">CMRR</div>
+            <div class="detail-item-value" id="detail-cmrr">$4,200</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">Days Inactive</div>
+            <div class="detail-item-value" id="detail-days" style="color:var(--warn);">18</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">Ticket Velocity</div>
+            <div class="detail-item-value" id="detail-tickets">4.2/wk</div>
+          </div>
+        </div>
+
+        <div class="panel-sub">Signal Breakdown</div>
+        <div id="detail-signals"></div>
+
+        <div class="panel-sub">Detected Intent</div>
+        <div id="detail-tags" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;"></div>
+
+        <button class="btn btn-approve btn-full" onclick="generateDraft()" style="margin-top:8px;">
+          🤖 Generate Recovery Draft
+        </button>
+      </div>
+    </div>
+
+    <!-- HITL DRAFT -->
+    <div class="panel-content panel-hidden" id="tab-draft">
+      <div id="draft-empty" class="empty-state">
+        <div class="icon">◭</div>
+        Select an account and generate a recovery draft to review it here
+      </div>
+      <div id="draft-content" style="display:none;">
+        <div class="panel-sub">AI-Generated Recovery Email</div>
+        <div class="draft-box">
+          <div class="draft-header">
+            <div class="draft-subject" id="draft-subject">Subject: —</div>
+            <span class="tag orange" id="draft-framework">Usage Drop</span>
+          </div>
+          <div class="draft-body" id="draft-body">Generating...</div>
+        </div>
+
+        <div class="panel-sub">HITL Review · Account Executive</div>
+        <div class="hitl-actions">
+          <button class="btn btn-approve" onclick="hitlAction('approve')">✓ Approve</button>
+          <button class="btn btn-reject" onclick="hitlAction('reject')">✗ Reject</button>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <textarea class="feedback-input" id="feedback-text" rows="3" placeholder="Or provide revision notes... (e.g. 'Make it shorter and reference Q3 data')"></textarea>
+          <button class="btn btn-revise btn-full" onclick="hitlAction('revise')">↻ Request Revision</button>
+        </div>
+
+        <div id="hitl-result" style="display:none;margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <!-- ARCH -->
+    <div class="panel-content panel-hidden" id="tab-arch">
+      <div class="panel-sub">Data Ingestion Layer</div>
+      <div class="flow-step">
+        <div class="flow-icon done">⬢</div>
+        <div class="flow-body">
+          <div class="flow-title">Mock CRM + Product Telemetry</div>
+          <div class="flow-desc">SQLite mock CRM · CMRR · DSO · Email threads · Feature usage events via async webhook</div>
+        </div>
+      </div>
+
+      <div class="panel-sub">ML Perception Layer</div>
+      <div class="flow-step">
+        <div class="flow-icon done">◬</div>
+        <div class="flow-body">
+          <div class="flow-title">Intelligence Analyst Agent</div>
+          <div class="flow-desc">Random Forest churn prediction · HF Zero-Shot NLI · Minibase.ai NER (local, 369MB) · PII stripped before cloud</div>
+          <div class="flow-code">Local CPU → Anonymized JSON</div>
+        </div>
+      </div>
+
+      <div class="panel-sub">Orchestration Layer</div>
+      <div class="flow-step">
+        <div class="flow-icon done">◭</div>
+        <div class="flow-body">
+          <div class="flow-title">CrewAI Flow · Sales Strategist</div>
+          <div class="flow-desc">Chris Voss Labeling · Reverse psychology · Competitor alignment · 75-word cap</div>
+          <div class="flow-code">@listen → draft_recovery_play()</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-icon waiting">⏸</div>
+        <div class="flow-body">
+          <div class="flow-title" style="color:var(--warn);">HITL Gate · @human_feedback</div>
+          <div class="flow-desc">Execution paused. AE reviews via Slack/email. gpt-4o-mini routes natural language → approved | rejected | needs_revision</div>
+          <div class="flow-code">or_("draft", "needs_revision") loop</div>
+        </div>
+      </div>
+
+      <div class="panel-sub">Execution Layer</div>
+      <div class="flow-step">
+        <div class="flow-icon pending">◈</div>
+        <div class="flow-body">
+          <div class="flow-title">CRM API / Slack / Email</div>
+          <div class="flow-desc">Approved emails dispatched via Outreach/SFDC REST API. Rejected → RLHF logging for model improvement.</div>
+        </div>
+      </div>
+
+      <div class="panel-sub" style="margin-top:8px;">Security Posture</div>
+      <div style="font-size:11.5px;color:var(--muted);line-height:1.7;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px;">
+        🔒 Raw PII never leaves local network. NER anonymizes before cloud LLM calls. Only sanitized JSON payloads transmitted upstream.
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<script>
+// ==================== DATA ====================
+let accounts = [
+  { id:1, name:"AcmeCorp", tier:"Enterprise", cmrr:4200, risk:0.87, signal:"usage_drop", tone:"passive-aggressive", days:18, tickets:4.2, adopt:32, cmrr_trend:-12, competitor:true, champion:false },
+  { id:2, name:"Nexus Analytics", tier:"Mid-Market", cmrr:2800, risk:0.74, signal:"champion", tone:"neutral", days:22, tickets:1.1, adopt:45, cmrr_trend:-8, competitor:false, champion:true },
+  { id:3, name:"Stratos Inc.", tier:"Enterprise", cmrr:6100, risk:0.68, signal:"competitor", tone:"positive", days:5, tickets:0.8, adopt:61, cmrr_trend:2, competitor:true, champion:false },
+  { id:4, name:"PineCrest Labs", tier:"SMB", cmrr:1200, risk:0.55, signal:"payment", tone:"neutral", days:9, tickets:2.3, adopt:50, cmrr_trend:-5, competitor:false, champion:false },
+  { id:5, name:"Vortex Systems", tier:"Mid-Market", cmrr:3400, risk:0.43, signal:"usage_drop", tone:"neutral", days:7, tickets:1.5, adopt:58, cmrr_trend:-3, competitor:false, champion:false },
+  { id:6, name:"Quantum Bridge", tier:"Enterprise", cmrr:8200, risk:0.31, signal:"normal", tone:"positive", days:2, tickets:0.5, adopt:78, cmrr_trend:5, competitor:false, champion:false },
+];
+
+const plays = {
+  champion: {
+    title: "Champion Leaves Recovery",
+    subject: "Overwhelmed with the transition?",
+    body: `Hi [New Stakeholder],
+
+It seems like you are inheriting a massive amount of legacy systems right now and are likely overwhelmed with vendor audits and a dozen competing priorities from the board. 
+
+I'm reaching out because behind the scenes, we've been managing your auto-renewal compliance reporting for the Nexus Analytics backend. I'd hate for that specific workflow to break entirely during a leadership transition.
+
+Can I offer a completely zero-pressure briefing? No pitch, no deck, just continuity context. Does a quick yes or no work for you?
+
+[AE Name]`,
+    framework: "Champion Leaves",
+    color: "blue"
+  },
+  usage: {
+    title: "Usage Drop / Abandoned Intent",
+    subject: "Did we break something in the UI?",
+    body: `Hi [Champion],
+
+This might be a complete waste of your time, but my tracking caught a severe 60% drop in your team's usage of the Core Analytics Module since Tuesday. Did our new navigation layout cause a bottleneck for your workflow? 
+
+If the dashboard is triggering friction rather than helping, I genuinely need to know so our engineers can fix it immediately. 
+
+No agenda or meeting request. Just let me know if we broke something.
+
+[AE Name]`,
+    framework: "Usage Drop",
+    color: "orange"
+  },
+  competitor: {
+    title: "Competitor Mention Response",
+    subject: "Fair enough — they are a strong choice.",
+    body: `Hi [Prospect],
+
+Honestly? Stratos has built a remarkably strong product over the last year. I would definitely be evaluating them too.
+
+Where we typically see enterprise teams switch to us, however, is when standard API throttling becomes a bottleneck at a massive scale. 
+
+Are you entirely opposed to a brief 15-minute technical comparison to see the difference before you decide? No pressure either way.
+
+[AE Name]`,
+    framework: "Competitor",
+    color: "red"
+  }
+};
+
+const drafts = {
+  usage_drop: plays.usage,
+  champion: plays.champion,
+  competitor: plays.competitor
+};
+
+// ==================== STATE ====================
+let selectedAccount = null;
+let currentDraft = null;
+let currentView = 'accounts';
+let currentTab = 'detail';
+
+const logs = [
+  { time:'02:00:01', level:'info', msg:'Nightly CRM sweep initiated. <span>1,000</span> accounts queued for scoring.' },
+  { time:'02:00:14', level:'ok', msg:'Random Forest scoring complete. <span>12</span> accounts flagged above threshold 0.40.' },
+  { time:'08:23:41', level:'warn', msg:'<span>feature_usage_dropped</span> webhook received — AcmeCorp. Usage delta: -60% over 72h.' },
+  { time:'08:23:42', level:'info', msg:'Intelligence Analyst Agent instantiated. Telemetry ingestion started.' },
+  { time:'08:23:44', level:'ok', msg:'HuggingFace NLI: competitor_comparison=0.71, cancellation_threat=0.34.' },
+  { time:'08:23:45', level:'ok', msg:'Minibase.ai NER: [ORG_01=AcmeCorp] extracted. PII stripped from payload.' },
+  { time:'08:23:46', level:'ok', msg:'Churn risk score: <span>0.87</span>. SHAP top: days_since_last_login (+0.31).' },
+  { time:'08:23:47', level:'info', msg:'B2B Sales Strategist Agent instantiated. Framework: <span>Usage Drop</span>.' },
+  { time:'08:23:51', level:'ok', msg:'Recovery draft generated. Chris Voss labeling applied. Reverse psychology framing active.' },
+  { time:'08:23:52', level:'warn', msg:'HITL gate triggered. Execution PAUSED. Slack notification dispatched to AE.' },
+  { time:'08:24:18', level:'info', msg:'AE feedback received: <span>"Make it slightly shorter"</span>. Router: needs_revision.' },
+  { time:'08:24:22', level:'ok', msg:'Revised draft generated. Routing back to HITL gate.' },
+  { time:'08:25:03', level:'warn', msg:'Awaiting AE final approval on revised draft...' },
+];
+
+// ==================== RENDER ====================
+function getRiskColor(r) {
+  if (r >= 0.75) return 'var(--danger)';
+  if (r >= 0.50) return 'var(--warn)';
+  return 'var(--accent)';
+}
+
+function getRiskTag(r) {
+  if (r >= 0.75) return '<span class="tag red">CRITICAL</span>';
+  if (r >= 0.50) return '<span class="tag orange">HIGH</span>';
+  return '<span class="tag green">MED</span>';
+}
+
+function getSignalTag(s) {
+  const map = {
+    usage_drop: '<span class="tag orange">Usage Drop</span>',
+    champion: '<span class="tag blue">Champion Inactive</span>',
+    competitor: '<span class="tag red">Competitor Mention</span>',
+    payment: '<span class="tag purple">Payment Delay</span>',
+    normal: '<span class="tag green">Healthy</span>'
+  };
+  return map[s] || s;
+}
+
+function getToneTag(t) {
+  const map = {
+    'passive-aggressive': '<span class="tag red">Passive-Aggressive</span>',
+    'neutral': '<span class="tag orange">Neutral</span>',
+    'positive': '<span class="tag green">Positive</span>'
+  };
+  return map[t] || t;
+}
+
+function renderAccounts() {
+  const tbody = document.getElementById('account-tbody');
+  tbody.innerHTML = accounts.map(a => `
+    <tr onclick="selectAccount(${a.id})" ${selectedAccount && selectedAccount.id===a.id ? 'class="selected"' : ''}>
+      <td>
+        <div style="font-weight:500;margin-bottom:2px;">${a.name}</div>
+        <div style="font-size:11px;color:var(--muted);">${a.tier}</div>
+      </td>
+      <td>
+        <div style="font-family:var(--font-mono);font-size:12px;">$${a.cmrr.toLocaleString()}</div>
+        <div style="font-size:11px;color:${a.cmrr_trend<0?'var(--danger)':'var(--accent)'};">${a.cmrr_trend>0?'+':''}${a.cmrr_trend}%</div>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="risk-bar"><div class="risk-fill" style="width:${a.risk*100}%;background:${getRiskColor(a.risk)}"></div></div>
+          <span style="font-family:var(--font-mono);font-size:11px;color:${getRiskColor(a.risk)};">${(a.risk*100).toFixed(0)}%</span>
+        </div>
+        ${getRiskTag(a.risk)}
+      </td>
+      <td>${getSignalTag(a.signal)}</td>
+      <td>${getToneTag(a.tone)}</td>
+      <td>
+        ${a.risk >= 0.5 ? `<button class="btn-sm primary" onclick="event.stopPropagation();selectAccountAndDraft(${a.id})">▶ Draft</button>` : '<span style="color:var(--muted);font-size:11px;">Monitor</span>'}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderLogs() {
+  const container = document.getElementById('log-container');
+  container.innerHTML = logs.map(l => `
+    <div class="log-entry">
+      <div class="log-time">${l.time}</div>
+      <div class="log-level ${l.level}">${l.level.toUpperCase()}</div>
+      <div class="log-msg">${l.msg}</div>
+    </div>
+  `).join('');
+}
+
+// ==================== ACTIONS ====================
+function selectAccount(id) {
+  selectedAccount = accounts.find(a => a.id === id);
+  renderAccounts();
+  updateAccountDetail();
+  if (currentTab !== 'detail') switchTab('detail');
+}
+
+function selectAccountAndDraft(id) {
+  selectAccount(id);
+  setTimeout(() => generateDraft(), 300);
+}
+
+function updateAccountDetail() {
+  const a = selectedAccount;
+  document.getElementById('account-detail-empty').style.display = 'none';
+  document.getElementById('account-detail-content').style.display = 'block';
+  document.getElementById('detail-name').textContent = a.name;
+  document.getElementById('detail-meta').textContent = `${a.tier} · SaaS · $${a.cmrr.toLocaleString()}/mo CMRR`;
+  document.getElementById('detail-score').textContent = a.risk.toFixed(2);
+  document.getElementById('detail-score').style.color = getRiskColor(a.risk);
+  document.getElementById('detail-cmrr').textContent = `$${a.cmrr.toLocaleString()}`;
+  document.getElementById('detail-days').textContent = a.days;
+  document.getElementById('detail-tickets').textContent = `${a.tickets}/wk`;
+
+  const signals = [
+    { name: 'Feature Adoption', val: a.adopt + '%', pct: a.adopt, color: a.adopt < 50 ? 'var(--danger)' : 'var(--accent)' },
+    { name: 'Days Since Login', val: a.days + 'd', pct: Math.min(a.days * 3, 100), color: a.days > 14 ? 'var(--danger)' : 'var(--warn)' },
+    { name: 'Ticket Velocity', val: a.tickets + '/wk', pct: Math.min(a.tickets * 15, 100), color: a.tickets > 3 ? 'var(--danger)' : 'var(--accent)' },
+    { name: 'CMRR Trend', val: (a.cmrr_trend > 0 ? '+' : '') + a.cmrr_trend + '%', pct: Math.abs(a.cmrr_trend) * 5, color: a.cmrr_trend < 0 ? 'var(--danger)' : 'var(--accent)' },
+  ];
+
+  document.getElementById('detail-signals').innerHTML = signals.map(s => `
+    <div class="signal-row">
+      <div class="signal-name">${s.name}</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="progress-mini"><div class="progress-fill" style="width:${s.pct}%;background:${s.color}"></div></div>
+        <div class="signal-val" style="color:${s.color}">${s.val}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const tags = [];
+  if (a.competitor) tags.push('<span class="tag red">Competitor Mention</span>');
+  if (a.champion) tags.push('<span class="tag blue">Champion Inactive</span>');
+  if (a.signal === 'usage_drop') tags.push('<span class="tag orange">Usage Drop Detected</span>');
+  if (a.signal === 'payment') tags.push('<span class="tag purple">DSO Spike</span>');
+  if (a.tone === 'passive-aggressive') tags.push('<span class="tag red">Passive-Aggressive Tone</span>');
+  if (!tags.length) tags.push('<span class="tag green">No High-Risk Intent</span>');
+  document.getElementById('detail-tags').innerHTML = tags.join('');
+}
+
+async function generateDraft() {
+  if (!selectedAccount) return;
+  const a = selectedAccount;
+  
+  switchTab('draft');
+  document.getElementById('draft-empty').style.display = 'none';
+  document.getElementById('draft-content').style.display = 'block';
+  document.getElementById('hitl-result').style.display = 'none';
+  document.getElementById('feedback-text').value = '';
+
+  document.getElementById('draft-subject').textContent = 'Subject: ⟳ Generating...';
+  document.getElementById('draft-framework').textContent = 'Thinking...';
+  document.getElementById('draft-framework').className = `tag orange`;
+  document.getElementById('draft-body').textContent = '⟳ Routing to backend Orchestrator Agent...';
+
+  addLog('info', `Sending intent to FastAPI backend for <span>${a.name}</span>`);
+  showToast('🤖 Agent Drafting', `Requesting LLM generation for ${a.name}...`);
+
+  try {
+    const response = await fetch('http://localhost:8000/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ account_id: a.id, signal: a.signal, name: a.name })
+    });
+    
+    if (!response.ok) throw new Error("Backend connection failed");
+    
+    const result = await response.json();
+    const play = result.draft;
+    currentDraft = play;
+    
+    document.getElementById('draft-subject').textContent = 'Subject: ' + play.subject;
+    document.getElementById('draft-framework').textContent = play.framework;
+    document.getElementById('draft-framework').className = `tag ${play.color}`;
+    document.getElementById('draft-body').textContent = play.body;
+    
+    addLog('ok', `Draft received from Backend. HITL gate PAUSED. AE review required for <span>${a.name}</span>.`);
+    showToast('⏸ HITL Review Required', `Draft ready for ${a.name}. Your approval needed before sending.`);
+  } catch (err) {
+    addLog('warn', `Backend LLM unreachable. Using resilient mock fallback for <span>${a.name}</span>.`);
+    
+    const play = a.competitor ? drafts.competitor : a.champion ? drafts.champion : drafts.usage_drop;
+    currentDraft = play;
+    
+    document.getElementById('draft-subject').textContent = 'Subject: ' + play.subject;
+    document.getElementById('draft-framework').textContent = play.framework;
+    document.getElementById('draft-framework').className = `tag ${play.color}`;
+    
+    setTimeout(() => {
+      document.getElementById('draft-body').textContent = play.body.replace('[Champion]', a.name.split(' ')[0]).replace('[New Stakeholder]', a.name.split(' ')[0]).replace('[Prospect]', a.name.split(' ')[0]);
+      addLog('ok', `Draft complete. HITL gate PAUSED.`);
+      showToast('⏸ HITL Review Required', `Draft ready for ${a.name}.`);
+    }, 1400);
+  }
+}
+
+function hitlAction(action) {
+  if (!currentDraft || !selectedAccount) return;
+  const feedback = document.getElementById('feedback-text').value.trim();
+  const result = document.getElementById('hitl-result');
+  result.style.display = 'block';
+
+  if (action === 'approve') {
+    result.innerHTML = `<div style="background:rgba(0,212,160,0.08);border:1px solid rgba(0,212,160,0.2);border-radius:6px;padding:12px;font-size:12px;color:var(--accent);">✓ Approved. Email queued in CRM API for dispatch to <strong>${selectedAccount.name}</strong>. RLHF pipeline updated.</div>`;
+    addLog('ok', `AE approved draft. <span>execute_campaign()</span> triggered. CRM API dispatch queued for <span>${selectedAccount.name}</span>.`);
+    showToast('✓ Email Dispatched', `Recovery email sent to ${selectedAccount.name} via CRM API.`);
+  } else if (action === 'reject') {
+    result.innerHTML = `<div style="background:rgba(255,77,106,0.08);border:1px solid rgba(255,77,106,0.2);border-radius:6px;padding:12px;font-size:12px;color:var(--danger);">✗ Rejected. Draft discarded. Feedback logged to RLHF pipeline for model improvement.</div>`;
+    addLog('err', `AE rejected draft for <span>${selectedAccount.name}</span>. <span>abort_campaign()</span> triggered. RLHF log updated.`);
+    showToast('✗ Draft Rejected', 'Feedback logged. No email sent.');
+  } else if (action === 'revise') {
+    const fb = feedback || 'Make it shorter';
+    result.innerHTML = `<div style="background:rgba(255,170,0,0.08);border:1px solid rgba(255,170,0,0.2);border-radius:6px;padding:12px;font-size:12px;color:var(--warn);">↻ Revision requested: "<em>${fb}</em>". Router model parsing → <strong>needs_revision</strong>. Re-delegating to Strategist Agent...</div>`;
+    addLog('warn', `AE revision: <span>"${fb}"</span>. Router: needs_revision. Re-delegating to Strategist Agent.`);
+    showToast('↻ Revising Draft', 'Agent is applying your feedback...');
+    setTimeout(() => {
+      addLog('ok', `Revised draft ready. Routing back to HITL gate for <span>${selectedAccount.name}</span>.`);
+    }, 1800);
+  }
+}
+
+function triggerEvent(type) {
+  const msgs = {
+    usage_drop: ['warn', 'feature_usage_dropped webhook: <span>-68%</span> usage in 72h for <span>Vortex Systems</span>.'],
+    champion: ['warn', 'champion_inactive trigger: <span>Nexus Analytics</span> champion last seen <span>22 days ago</span>.'],
+    competitor: ['warn', 'email_received: Zero-shot NLI → competitor_comparison=<span>0.82</span> for <span>Stratos Inc.</span>'],
+    sweep: ['info', 'Nightly CRM sweep initiated manually. <span>6</span> accounts queued.']
+  };
+  const [level, msg] = msgs[type];
+  addLog(level, msg);
+  showToast('⚡ Event Triggered', msg.replace(/<[^>]+>/g, ''));
+}
+
+function runSweep() {
+  addLog('info', 'Manual CRM refresh triggered. Re-scoring <span>6</span> accounts...');
+  showToast('⟳ Refreshing', 'Re-scoring all accounts...');
+  setTimeout(() => addLog('ok', 'Refresh complete. Risk scores updated.'), 1200);
+}
+
+function selectPlay(p) {
+  const play = plays[p];
+  document.getElementById('play-detail').innerHTML = `
+    <div class="table-header-row"><div class="section-title">${play.title}</div></div>
+    <div style="padding:16px;">
+      <div class="panel-sub">System Prompt Excerpt</div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px;font-family:var(--font-mono);font-size:11px;color:var(--muted);line-height:1.7;white-space:pre-wrap;margin-bottom:14px;">${getPlayPrompt(p)}</div>
+      <div class="panel-sub">Example Draft</div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:12px;line-height:1.7;color:#c5cad6;white-space:pre-wrap;">${play.body}</div>
+    </div>
+  `;
+}
+
+function getPlayPrompt(p) {
+  const prompts = {
+    champion: `SYSTEM: You are an elite B2B Sales Strategist.
+Objective: Draft recovery email to newly appointed exec.
+
+Rules:
+1. Never pitch features or prove ROI
+2. Apply Labeling technique (Chris Voss)
+3. Offer zero-pressure transition briefing
+4. Highlight one specific risk being managed
+
+Structure:
+• Pattern interrupt subject (3-5 words)
+• Empathy/Labeling statement
+• Value/Risk mitigation proof  
+• Low-friction yes/no CTA`,
+    usage: `SYSTEM: You are a Senior Customer Retention Specialist.
+Trigger: 60% core feature usage drop in 72h.
+
+Rules:
+1. Never use "checking in", "touching base"
+2. Apologetic tone / reverse psychology
+3. Reference the specific dropped feature
+4. Provide a high-control "out" for the user
+
+Framework: Attribute failure to UI, not the user.
+Preserve ego. Interrupt standard follow-up pattern.`,
+    competitor: `SYSTEM: You are a veteran B2B Account Executive.
+Trigger: Prospect evaluating direct competitor.
+
+Rules:
+1. Validate their choice — compliment competitor
+2. Pivot with: "Where we typically see teams switch..."
+3. Keep email UNDER 75 words (confidence via brevity)
+4. Soft CTA validating their autonomy
+
+Psychology: Avoid backfire effect. Alignment > attack.`
+  };
+  return prompts[p];
+}
+
+// ==================== UI HELPERS ====================
+function switchView(v) {
+  document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('panel-hidden'));
+  document.getElementById('view-' + v).classList.remove('panel-hidden');
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  currentView = v;
+  if (v === 'logs') renderLogs();
+}
+
+function switchTab(t) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('panel-hidden'));
+  document.getElementById('tab-' + t).classList.remove('panel-hidden');
+  document.querySelectorAll('.panel-tab').forEach(el => el.classList.remove('active'));
+  const idx = { detail: 0, draft: 1, arch: 2 };
+  document.querySelectorAll('.panel-tab')[idx[t]].classList.add('active');
+  currentTab = t;
+}
+
+function addLog(level, msg) {
+  const now = new Date();
+  const time = now.toTimeString().slice(0,8);
+  logs.push({ time, level, msg });
+  if (currentView === 'logs') renderLogs();
+  const badge = document.getElementById('alert-count');
+  if (level === 'warn' || level === 'err') {
+    badge.textContent = parseInt(badge.textContent) + 1;
+  }
+}
+
+function showToast(title, body) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-body').textContent = body;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3800);
+}
+
+// ==================== INIT ====================
+async function initApp() {
+  try {
+    const res = await fetch('http://localhost:8000/api/accounts');
+    if(res.ok) {
+      const data = await res.json();
+      accounts = data.accounts;
+      addLog('ok', 'Telemetry pulled dynamically from FastAPI backend.');
+    } else { throw new Error("Backend HTTP Not OK"); }
+  } catch(e) {
+    addLog('warn', 'FastAPI backend offline. Initializing with local resilient mock telemetry.');
+  }
+  
+  renderAccounts();
+  renderLogs();
+  setTimeout(() => showToast('⬢ System Online', '2/2 agents online. Nightly sweep complete. 3 accounts require action.'), 800);
+}
+
+// Auto-fire startup sequence
+initApp();
+</script>
+</body>
+</html>
