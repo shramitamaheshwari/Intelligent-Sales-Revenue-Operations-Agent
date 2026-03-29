@@ -9,7 +9,7 @@ class AnalystAgentBuilder:
             goal='Detect competitor mentions and churn signals in client telemetry and emails.',
             backstory='An analytical engine trained on B2B SaaS usage metrics and BERT sentiment models. You are highly detail-oriented.',
             verbose=True,
-            llm="groq/llama3-8b-8192"
+            llm="groq/llama-3.1-8b-instant"
         )
 
 # Pipeline structure Mock
@@ -27,4 +27,8 @@ class ChurnScoringPipeline:
         
     def predict_risk(self, features: list):
         # features format: [CMRR, support, days_last_login]
-        return self.model.predict_proba([features])[0][1] # Probability of churn
+        # Wrap in DataFrame with the exact column names used during training
+        # to avoid sklearn feature name mismatch warnings
+        import pandas as pd
+        X = pd.DataFrame([features], columns=['CMRR_mean', 'support_ticket_velocity', 'days_since_last_login'])
+        return self.model.predict_proba(X)[0][1]  # Probability of churn

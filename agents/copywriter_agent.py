@@ -15,5 +15,5 @@ class CopywriterAgentBuilder:
                 "3. Use 'Chris Voss Labeling' psychology to validate choices and build trust."
             ),
             verbose=True,
-            llm="groq/llama3-8b-8192"
+            llm="groq/llama-3.1-8b-instant"
         )

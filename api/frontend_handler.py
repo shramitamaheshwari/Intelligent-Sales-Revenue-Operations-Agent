@@ -3,6 +3,11 @@ from pydantic import BaseModel
 import asyncio
 import os
 import sys
+from pathlib import Path
+
+# Resolve repo root so CSV reads work regardless of CWD
+REPO_ROOT = Path(__file__).resolve().parent.parent
+CSV_PATH = REPO_ROOT / "data" / "mock_datasets" / "telemetry.csv"
 
 try:
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -38,9 +43,15 @@ async def get_accounts():
     """
     import pandas as pd
     try:
-        df = pd.read_csv("data/mock_datasets/telemetry.csv")
-    except Exception:
-        df = pd.DataFrame([{"CMRR_mean": 4200, "days_since_last_login": 18, "support_ticket_velocity": 4.2}])
+        df = pd.read_csv(str(CSV_PATH))
+    except Exception as e:
+        print(f"CSV load failed ({e}), using inline fallback")
+        df = pd.DataFrame([
+            {"CMRR_mean": 4200, "days_since_last_login": 18, "support_ticket_velocity": 4.2},
+            {"CMRR_mean": 2800, "days_since_last_login": 22, "support_ticket_velocity": 1.1},
+            {"CMRR_mean": 6100, "days_since_last_login": 5,  "support_ticket_velocity": 0.8},
+            {"CMRR_mean": 1200, "days_since_last_login": 9,  "support_ticket_velocity": 2.3},
+        ])
 
     accounts = []
     # Generate varied signals and names deterministically based on index for demo purposes
@@ -50,7 +61,7 @@ async def get_accounts():
 
     for idx, row in df.iterrows():
         # Prevent massive payloads crashing the UI, limit to 25 for demo visibility
-        if idx >= 25: 
+        if idx >= 50:   # Show up to 50 accounts for richer ROI numbers
             break
             
         cmrr = float(row.get('CMRR_mean', 3000))
