@@ -1,8 +1,27 @@
 # Intelligent Sales & Revenue Operations Agent
 
-An autonomous multi-agent orchestration layer capable of autonomous prospect research, nuanced conversational intent synthesis, and the deployment of psychologically optimized revenue recovery plays. Built deterministically via **CrewAI Flows** and tightly gated by **Human-in-the-Loop (HITL)** approvals.
+An autonomous multi-agent orchestration layer designed for mid-funnel retention and deal recovery. It is capable of active pipeline monitoring, nuanced conversational intent synthesis, and the deterministic deployment of psychologically optimized revenue recovery plays. Powered by **CrewAI Flows** and tightly gated by **Human-in-the-Loop (HITL)** approvals.
 
-## 🚀 Repository Architecture
+## Hackathon Evaluation Alignment
+
+This project specifically targets mid-funnel retention, deal intelligence, and competitive adaptation over cold outbound prospecting. It demonstrates the following core capabilities:
+
+1. **Deal Intelligence**
+   - **Active Webhook Monitoring:** Listens for CRM triggers (`feature_usage_dropped`, `champion_inactive`).
+   - **NLP Perception:** Integrates Hugging Face NLI to detect competitor alignment and passive-aggressive sentiment automatically.
+   - **Recovery Plays:** Deploys Chris Voss's psychological labeling technique to mitigate risk via the `CopywriterAgent`.
+
+2. **Revenue Retention**
+   - **Predictive ML:** Uses a Random Forest classifier in `AnalystAgent` to predict churn probabilty based on mocked usage metrics (CMRR, support ticket velocity).
+   - **Intervention Escalation:** The Orchestrator initiates interventions, drafts targeted emails, and heavily relies on a CrewAI flow Human-in-the-Loop (HITL) gate for Account Executive approval.
+
+3. **Competitive Intelligence**
+   - **Dynamic Adaptation:** Upon detecting a competitor mention via Zero-Shot NLI, the system flags the orchestrator and applies a strict 75-word cap and strategic pivot rule to the generated copy.
+
+4. **Pipeline Impact & Adaptability**
+   - **Self-Healing Loop:** The CrewAI Orchestrator features a self-healing loop using a natural-language router to interpret Account Executive feedback and recursively adapt email drafts.
+
+## Repository Architecture
 
 ```text
 /intelligent-revops-agent 
@@ -24,33 +43,32 @@ An autonomous multi-agent orchestration layer capable of autonomous prospect res
 └── README.md            # Extensive documentation, setup commands, and ROI summary 
 ```
 
-## 🧠 System Mechanics
-1. **Pillar 1: B2B Churn Feature Engineering**: Python-driven synthetic CRM environments leveraging Gaussian and Poisson distributions to predict leading drop-off indicators.
-2. **Pillar 2: Sentiment NLP**: Hugging Face inference endpoints identifying competitor mentions via zero-shot classification and detecting passive aggression using DistilBERT. PII anonymization handled by local NER extraction.
-3. **Pillar 3: Sales Psychology**: LLMs instructed specifically with Chris Voss labeling methodologies to diffuse CRM risk scenarios without generically pitching software features.
-4. **Pillar 4: Multi-Agent Orchestration**: CrewAI flows routing actions across specialized agents seamlessly up until the Human-in-the-loop checkpoint. An integrated router model evaluates AE chat feedback iteratively (`approved`, `needs_revision`, `rejected`).
+## Setup Instructions & Execution
 
-## ⚙️ Setup Instructions & Execution
+### 1. Initialize Workspace
+```bash
+python -m venv venv
+source venv/Scripts/activate # Windows: .\venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-1. **Initialize Workspace**:
-   ```bash
-   python -m venv venv
-   source venv/Scripts/activate # OR source venv/bin/activate on Mac/Linux
-   pip install -r requirements.txt
-   ```
-2. **Generate Synthetic Data**:
-   ```bash
-   python -m data.generate_mock
-   ```
-3. **Run the API & Webhooks**:
-   ```bash
-   python -m api.main
-   ```
-4. **Trigger Orchestration Flow**:
-   Post a sample payload to `http://localhost:8000/webhooks/telemetry` or manually run the orchestrator module directly.
+### 2. Generate Synthetic Data
+Mock datasets ensure presentation reliability during hackathon evaluations. This script generates `telemetry.csv` using strict realistic distributions.
+```bash
+python -m data.generate_mock
+```
 
-## 📈 Quantified Impact Model (ROI)
+### 3. Run the API & Webhooks
+Starts the FastAPI server (accessible at http://localhost:8000/docs for Swagger UI testing).
+```bash
+python -m api.main
+```
 
-* **Cost Efficiency**: Automating account research and drafting saves ~30 min per stalled deal. For 1,000 at-risk deals/yr at a $75/hr Account Executive rate, operational savings eclipse $35,000 annually.
-* **Revenue Recovery**: Recovering merely 15% more churn on a $500,000 MRR risk pool yields $75,000 incrementally.
-* **Total Program ROI**: By investing a conservative baseline implementation cost, organizations can expect over **250%+ pure ROI** in the first fiscal year, pivoting their CRM from a static database into an autonomous revenue engine.
+### 4. Trigger Orchestration Flow
+Post a sample JSON payload to `/webhooks/telemetry` or manually run the orchestrator module directly to witness the CrewAI flow generation and HITL gate check.
+
+## Quantified Impact Model (ROI)
+
+* **Cost Efficiency:** Automating account research and drafting saves ~30 min per stalled deal. For 1,000 at-risk deals/yr at a $75/hr Account Executive rate, operational savings eclipse $35,000 annually.
+* **Revenue Recovery:** Recovering merely 15% more churn on a $500,000 MRR risk pool yields $75,000 incrementally.
+* **Total Program ROI:** By investing a conservative baseline implementation cost, organizations can expect over 250%+ pure ROI in the first fiscal year, pivoting their CRM from a static database into an autonomous revenue engine.
